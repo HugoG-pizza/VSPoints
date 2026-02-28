@@ -1,0 +1,412 @@
+:root {
+    --bg-color: #1a1a1d;
+    --card-bg: #2c2c2e;
+    --text-color: #e0e0e0;
+    --accent: #4caf50;
+    --danger: #f44336;
+    --vip-color: #ffd700;
+    --train-color: #2196f3;
+    --input-bg: #3a3a3c;
+    --rank-bg: #9c27b0;
+    --separator: #555;
+    --import-color: #00bcd4;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0; padding: 0;
+    display: flex; justify-content: center; min-height: 100vh;
+}
+
+.container { width: 100%; max-width: 950px; padding-bottom: 80px; }
+
+/* NAVIGATION */
+.nav-tabs { display: flex; gap: 10px; padding: 20px 20px 0 20px; background: var(--bg-color); }
+.tab-btn {
+    background: #333; color: #aaa; border: none; padding: 10px 20px;
+    cursor: pointer; border-radius: 5px 5px 0 0; flex: 1; font-size: 1.1em;
+}
+.tab-btn.active { background: var(--accent); color: white; font-weight: bold; }
+.tab-content { display: none; padding: 20px; }
+.tab-content.active { display: block; }
+
+/* STICKY PANEL */
+.sticky-panel {
+    position: sticky; top: 0; z-index: 50; background-color: var(--bg-color);
+    padding-top: 10px; padding-bottom: 10px; border-bottom: 2px solid #333; margin-bottom: 20px;
+}
+.filter-bar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #444;
+}
+.rank-toggles { display: flex; gap: 4px; align-items: center; }
+.rank-btn {
+    background: #444; border: 1px solid #555; color: #aaa; padding: 5px 10px;
+    cursor: pointer; border-radius: 4px; font-size: 0.9em;
+}
+.rank-btn.active { background: var(--rank-bg); color: white; border-color: white; font-weight: bold; }
+.reset-btn {
+    background: transparent; border: 1px solid #666; color: #aaa; padding: 5px 8px;
+    cursor: pointer; border-radius: 4px; font-size: 0.8em; margin-left: 5px;
+}
+.reset-btn:hover { background: #555; color: white; }
+.vertical-sep { width: 1px; height: 20px; background: #555; margin: 0 5px; }
+.sort-controls { display: flex; gap: 5px; }
+.reverse-btn {
+    background: #444; color: white; border: 1px solid #555; cursor: pointer;
+    padding: 0 10px; border-radius: 4px; font-size: 1.2em;
+}
+
+/* INPUTS */
+.control-box {
+    background-color: var(--card-bg); padding: 15px; border-radius: 8px;
+    display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.input-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; }
+label { font-size: 0.75em; margin-bottom: 4px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;}
+input, select {
+    padding: 8px; background: var(--input-bg); border: 1px solid #555; color: white;
+    border-radius: 4px; font-size: 0.95em; width: 100%; box-sizing: border-box;
+}
+button.action-btn {
+    padding: 0 25px; border: none; border-radius: 4px; cursor: pointer;
+    font-weight: bold; background-color: var(--accent); color: white; height: 38px; margin-top: 17px;
+}
+
+/* SUGGESTIONS */
+.suggestions-box {
+    position: absolute; top: 100%; left: 0; right: 0; background: #444; border: 1px solid #555;
+    max-height: 200px; overflow-y: auto; z-index: 100; display: none;
+}
+.suggestion-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #555; }
+.suggestion-item:hover { background: var(--accent); }
+
+/* MAIN LIST */
+.rank-separator {
+    display: flex; align-items: center; justify-content: center;
+    margin: 15px 0 5px 0; color: #888; font-size: 0.8em; font-weight: bold; letter-spacing: 2px;
+}
+.rank-separator::before, .rank-separator::after { content: ""; flex: 1; height: 1px; background: #444; margin: 0 10px; }
+.member-row {
+    background-color: var(--card-bg); margin-bottom: 8px; padding: 10px 15px;
+    border-radius: 6px; display: flex; align-items: center; justify-content: space-between;
+    border-left: 4px solid transparent;
+}
+.member-row:hover { background-color: #38383a; }
+.member-identity { display: flex; align-items: center; gap: 10px; width: 30%; cursor: pointer; }
+.rank-badge { font-size: 0.75em; padding: 2px 6px; border-radius: 3px; background: var(--rank-bg); color: white; font-weight: bold; }
+.name-text { font-weight: bold; font-size: 1.1em; }
+.member-identity:hover .name-text { color: var(--accent); text-decoration: underline; }
+.reward-history { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.history-badge {
+    font-size: 0.75em; padding: 3px 8px; border-radius: 4px;
+    display: flex; flex-direction: column; align-items: center; min-width: 50px;
+    text-align: center; color: #000; cursor: pointer; transition: transform 0.1s;
+}
+.history-badge:hover { transform: scale(1.05); filter: brightness(1.1); }
+.history-badge span.date { font-size: 0.8em; opacity: 0.7; font-weight: normal;}
+.bg-vip { background-color: var(--vip-color); }
+.bg-train { background-color: var(--train-color); color: white;}
+
+/* ADMIN */
+.admin-add-box { background:#222; padding:15px; border-radius:8px; margin-bottom:20px; display:flex; gap:10px; align-items:end; }
+.member-manage-grid { display: flex; flex-direction: column; gap: 15px; }
+.rank-group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.member-chip {
+    background: #444; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; border: 1px solid transparent; transition: border 0.2s;
+}
+.member-chip:hover { border-color: var(--accent); background: #555; }
+.btn-import {
+    background: transparent; border: 1px solid var(--import-color); color: var(--import-color);
+    padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.2s;
+}
+.btn-import:hover { background: var(--import-color); color: #000; }
+
+/* MODALS */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);
+    z-index: 1000; display: none; justify-content: center; align-items: center;
+}
+.modal-box { background: var(--card-bg); padding: 25px; border-radius: 8px; width: 300px; border: 1px solid #555; }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.btn-cancel { background: #666; color:white; border:none; padding:8px 15px; cursor:pointer; border-radius:4px;}
+.btn-delete { background: var(--danger); color:white; border:none; padding:8px 15px; cursor:pointer; border-radius:4px;}
+.btn-save { background: var(--accent); color:white; border:none; padding:8px 15px; cursor:pointer; border-radius:4px;}
+
+/* Import Textarea */
+#importTextarea {
+    width: 100%; box-sizing: border-box; background: #222; color: #ddd;
+    border: 1px solid #555; padding: 10px; font-family: monospace; resize: vertical;
+}
+
+.log-area { margin-top: 30px; border-top: 1px solid #444; padding-top: 10px; text-align: center;}
+.btn-log { background: transparent; border: 1px solid #666; color: #888; padding: 5px 10px; cursor:pointer;}
+
+/* BACKUP PANEL */
+.backup-panel {
+    border: 1px solid #555; padding: 15px; margin-top: 30px; border-radius: 8px; background: #222;
+}
+.backup-list-container {
+    max-height:100px; overflow-y:auto; background:#111; padding:10px; border-radius:4px; font-family:monospace; font-size:0.85em;
+}
+
+/* Styles spécifiques pour les boutons de Type */
+.type-btn { font-weight: bold; }
+.type-btn.active.btn-vip { background-color: var(--vip-color); color: #000; border-color: var(--vip-color); }
+.type-btn.active.btn-train { background-color: var(--train-color); color: white; border-color: var(--train-color); }
+
+
+
+/* ========================================= */
+/* CSS SPÉCIFIQUE APP 3 (ROSTER MANAGER)     */
+/* ========================================= */
+
+.roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+}
+
+.roster-table th {
+    background: #222;
+    color: #aaa;
+    padding: 12px 10px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #444;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.roster-table td {
+    padding: 8px 5px;
+    border-bottom: 1px solid #333;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.roster-table tr:hover td {
+    background-color: #333;
+}
+
+.player-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 15px !important;
+}
+
+.player-name {
+    font-weight: bold;
+    color: #eee;
+}
+
+/* Boutons de changement de niveau */
+.roster-btn {
+    width: 100%;
+    max-width: 80px;
+    padding: 8px 0;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.roster-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+/* Couleurs des états */
+.btn-nan {
+    background: #333;
+    color: #666;
+    border: 1px solid #444;
+}
+
+.btn-3star {
+    background: #2196f3; /* Bleu pour 3* */
+    color: white;
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+}
+
+.btn-4star {
+    background: #9c27b0; /* Violet/Or pour 4* */
+    color: white;
+    box-shadow: 0 0 10px rgba(156, 39, 176, 0.6);
+}
+
+/* Petit badge ABS si besoin */
+.abs-badge {
+    background-color: #666 !important;
+    opacity: 0.7;
+}
+
+/* ========================================= */
+/* RESPONSIVE FILTER BAR (APP 3)             */
+/* ========================================= */
+
+.roster-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: space-between;
+    background: #222;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+    min-width: 300px;
+}
+
+.filter-label {
+    color: #aaa;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.roster-filter-bar select {
+    flex: 1;
+    min-width: 130px;
+}
+
+#searchPlayer {
+    min-width: 200px;
+    flex: 0.5;
+}
+
+/* Format Mobile (Écrans étroits) */
+@media (max-width: 600px) {
+    .roster-filter-bar {
+        flex-direction: column;
+        padding: 12px;
+        gap: 12px;
+    }
+    
+    .filter-group {
+        min-width: 100%;
+        justify-content: space-between;
+    }
+    
+    #searchPlayer {
+        width: 100%;
+        flex: none;
+    }
+    
+    .responsive-btn {
+        flex: 1; /* Étire le bouton reset si besoin sur mobile */
+        min-width: 80px;
+    }
+}
+
+
+/* ========================================= */
+/* CSS SPÉCIFIQUE APP 4 (SCORE MANAGER)      */
+/* ========================================= */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.score-table th, .score-table td {
+    min-width: 90px; /* Force une largeur pour éviter l'écrasement sur mobile */
+}
+
+/* La magie du Sticky pour la première colonne sur Mobile */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: var(--card-bg) !important;
+    z-index: 10;
+    border-right: 2px solid #555 !important;
+}
+
+/* On force le header de la colonne sticky à passer au dessus du reste au scroll */
+thead .sticky-col {
+    z-index: 15;
+}
+
+.score-cell {
+    background: #222;
+    border: 1px solid #333;
+    padding: 10px 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 1.1em;
+    transition: 0.15s;
+}
+
+.score-cell:hover {
+    background: #333;
+    border-color: var(--train-color);
+}
+
+/* Ajustements filtres responsive pour App 4 */
+@media (max-width: 600px) {
+    #weekSelect {
+        width: 100%;
+    }
+}
+
+
+
+
+/* ========================================= */
+/* COULEURS ET TRI APP 4 (SCORE MANAGER)     */
+/* ========================================= */
+
+.sortable-th {
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.sortable-th:hover {
+    background: #333;
+    color: white;
+}
+
+/* Couleurs des scores basées sur les seuils */
+.score-dark-green {
+    background-color: #1b5e20 !important;
+    border-color: #2e7d32 !important;
+    color: #fff !important;
+}
+
+.score-green {
+    background-color: #4ad651 !important;
+    border-color: #6bf870 !important;
+    color: #fff !important;
+}
+
+.score-yellow {
+    background-color: #fbc02d !important;
+    border-color: #fdd835 !important;
+    color: #000 !important;
+}
+
+.score-red {
+    background-color: #c62828 !important;
+    border-color: #e53935 !important;
+    color: #fff !important;
+}
