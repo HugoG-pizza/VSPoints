@@ -13,7 +13,7 @@
     
     <div class="panel-header" style="margin-top: 20px;">
         <h2 style="color: var(--accent); margin-bottom: 5px;">🏆 Event Score Manager</h2>
-        <p class="subtitle">Cliquez sur une case ou utilisez la saisie globale pour enregistrer les points</p>
+        <p class="subtitle">Saisie et suivi des points du clan</p>
     </div>
 
     <div class="filter-bar roster-filter-bar" style="background: #222; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -21,11 +21,16 @@
             <span class="filter-label">📅 Semaine :</span>
             <select id="weekSelect" onchange="changeWeek()" style="font-weight: bold; color: var(--accent);">
                 </select>
-            <button class="btn-save responsive-btn" onclick="openNewWeekModal()">+ Nouvelle Semaine</button>
-            <button class="action-btn responsive-btn" style="margin:0;" onclick="openBulkScoreModal()">📥 Saisie Rapide (Jour)</button>
+            
+            <button class="btn-delete responsive-btn" onclick="deleteCurrentWeek()" title="Supprimer la semaine" style="padding: 8px 10px;">🗑️</button>
+            <button class="btn-save responsive-btn" onclick="openNewWeekModal()">+ Nouvelle</button>
         </div>
-        <div class="filter-group" style="justify-content: flex-end;">
-            <input type="text" id="searchPlayer" placeholder="Chercher un joueur..." oninput="renderGrid()">
+        
+        <div class="filter-group" style="justify-content: flex-end; gap: 8px;">
+            <button class="action-btn responsive-btn" style="margin:0; background: #00bcd4; color: black;" onclick="exportToCSV()">⬇️ CSV</button>
+            <button class="action-btn responsive-btn" style="margin:0; background: #9c27b0;" onclick="openAliasModal()">📖 Dico</button>
+            <button class="action-btn responsive-btn" style="margin:0;" onclick="openBulkScoreModal()">📥 Import Jour</button>
+            <input type="text" id="searchPlayer" placeholder="Chercher..." oninput="renderGrid()">
         </div>
     </div>
 
@@ -38,6 +43,25 @@
         </table>
     </div>
 
+</div>
+
+<div id="newWeekModal" class="modal-overlay" onclick="if(event.target.id === 'newWeekModal') closeNewWeekModal()">
+    <div class="modal-box">
+        <h3 style="margin-top:0">Créer une semaine</h3>
+        <div style="margin-bottom:15px">
+            <label style="color:#aaa; font-size:0.8em; text-transform:uppercase;">Nom de l'événement</label>
+            <input type="text" id="newWeekName" placeholder="Ex: BSGI" style="width:100%; margin-top:5px; padding:10px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px; font-weight:bold;">
+        </div>
+        <div style="margin-bottom:15px">
+            <label style="color:#aaa; font-size:0.8em; text-transform:uppercase;">Un jour de la semaine</label>
+            <p style="font-size:0.8em; margin:2px 0 5px 0; color:#888;">Le système calculera le Lundi et le Samedi.</p>
+            <input type="date" id="newWeekDate" style="width:100%; padding:10px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px; color-scheme: dark;">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeNewWeekModal()">Annuler</button>
+            <button class="btn-save" onclick="confirmNewWeek()">Créer</button>
+        </div>
+    </div>
 </div>
 
 <div id="scoreModal" class="modal-overlay" onclick="if(event.target.id === 'scoreModal') closeScoreModal()">
@@ -64,16 +88,16 @@
         <div style="margin-bottom:15px">
             <label style="color:#aaa;">Sélectionnez le jour cible :</label>
             <select id="bulkScoreDay" style="width:100%; padding:8px; margin-top:5px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px;">
-                <option value="J1">Jour 1 (J1)</option>
-                <option value="J2">Jour 2 (J2)</option>
-                <option value="J3">Jour 3 (J3)</option>
-                <option value="J4">Jour 4 (J4)</option>
-                <option value="J5">Jour 5 (J5)</option>
-                <option value="J6">Jour 6 (J6)</option>
+                <option value="J1">Lundi (J1)</option>
+                <option value="J2">Mardi (J2)</option>
+                <option value="J3">Mercredi (J3)</option>
+                <option value="J4">Jeudi (J4)</option>
+                <option value="J5">Vendredi (J5)</option>
+                <option value="J6">Samedi (J6)</option>
             </select>
         </div>
-        <p style="font-size:0.85em; color:#aaa; margin-bottom:5px;">Format : <code>"Pseudo", Score</code> (Gère les virgules et le format ligne unique)</p>
-        <textarea id="bulkScoreTextarea" rows="10" placeholder='"VerOvni", 16,161,755 "Karbur", 7500000' style="width:100%; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; padding:10px; font-family:monospace; resize:vertical;"></textarea>
+        <p style="font-size:0.85em; color:#aaa; margin-bottom:5px;">Collez votre extraction ici :</p>
+        <textarea id="bulkScoreTextarea" rows="10" placeholder='"Pseudo", 16,161,755' style="width:100%; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; padding:10px; font-family:monospace; resize:vertical;"></textarea>
         <div class="modal-buttons">
             <button class="btn-cancel" onclick="closeBulkScoreModal()">Annuler</button>
             <button class="btn-save" onclick="processBulkScores()">Importer</button>
@@ -81,24 +105,27 @@
     </div>
 </div>
 
-<div id="newWeekModal" class="modal-overlay" onclick="if(event.target.id === 'newWeekModal') closeNewWeekModal()">
-    <div class="modal-box">
-        <h3 style="margin-top:0">Créer une nouvelle semaine</h3>
+<div id="aliasModal" class="modal-overlay" onclick="if(event.target.id === 'aliasModal') closeAliasModal()">
+    <div class="modal-box" style="width: 450px;">
+        <h3 style="margin-top:0">Dictionnaire des Pseudos</h3>
+        <p style="font-size:0.85em; color:#aaa; margin-bottom:15px;">Faites correspondre les pseudos bizarres du jeu aux vrais noms de la base.</p>
         
-        <div style="margin-bottom:15px">
-            <label style="color:#aaa; font-size:0.8em; text-transform:uppercase;">Nom de l'événement</label>
-            <input type="text" id="newWeekName" placeholder="Ex: BSGI" style="width:100%; margin-top:5px; padding:10px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px; font-weight:bold;">
+        <div style="background: #222; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+            <label style="color:var(--accent); font-size:0.8em; font-weight:bold;">1. Pseudo extrait du jeu (ex: Илudeн)</label>
+            <input type="text" id="newAliasName" placeholder="Surnom bizarre..." style="width:100%; margin:5px 0 10px 0; padding:8px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px;">
+            
+            <label style="color:var(--accent); font-size:0.8em; font-weight:bold;">2. Vrai nom dans la base</label>
+            <select id="newAliasRealName" style="width:100%; margin:5px 0 10px 0; padding:8px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px;">
+                </select>
+            
+            <button class="btn-save" style="width: 100%;" onclick="addAlias()">Ajouter au Dico</button>
         </div>
 
-        <div style="margin-bottom:15px">
-            <label style="color:#aaa; font-size:0.8em; text-transform:uppercase;">Un jour de la semaine</label>
-            <p style="font-size:0.8em; margin:2px 0 5px 0; color:#888;">Choisissez n'importe quel jour, le système calculera le Lundi et le Samedi.</p>
-            <input type="date" id="newWeekDate" style="width:100%; padding:10px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px; color-scheme: dark;">
-        </div>
-        
+        <div style="max-height: 200px; overflow-y: auto;" id="aliasListContainer">
+            </div>
+
         <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeNewWeekModal()">Annuler</button>
-            <button class="btn-save" onclick="confirmNewWeek()">Créer</button>
+            <button class="btn-cancel" onclick="closeAliasModal()">Fermer</button>
         </div>
     </div>
 </div>
