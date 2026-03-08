@@ -85,9 +85,10 @@
 <div id="bulkScoreModal" class="modal-overlay" onclick="if(event.target.id === 'bulkScoreModal') closeBulkScoreModal()">
     <div class="modal-box" style="width: 450px;">
         <h3 style="margin-top:0">Saisie Rapide (Journée)</h3>
+        
         <div style="margin-bottom:15px">
             <label style="color:#aaa;">Sélectionnez le jour cible :</label>
-            <select id="bulkScoreDay" style="width:100%; padding:8px; margin-top:5px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px;">
+            <select id="bulkScoreDay" onchange="toggleBulkMode()" style="width:100%; padding:8px; margin-top:5px; background:var(--input-bg); color:white; border:1px solid #555; border-radius:4px;">
                 <option value="J1">Lundi (J1)</option>
                 <option value="J2">Mardi (J2)</option>
                 <option value="J3">Mercredi (J3)</option>
@@ -95,9 +96,22 @@
                 <option value="J5">Vendredi (J5)</option>
                 <option value="J6">Samedi (J6)</option>
             </select>
+
+            <div id="bulkTotalModeContainer" style="display:none; margin-top:10px; background:#333; padding:10px; border-radius:4px; border-left: 3px solid var(--accent);">
+                <label style="color:var(--accent); font-size:0.9em; display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold;">
+                    <input type="checkbox" id="bulkTotalModeToggle" style="width:18px; height:18px;">
+                    Calculer J6 via le Total
+                </label>
+                <p style="font-size:0.8em; color:#aaa; margin:5px 0 0 0; line-height:1.4;">
+                    Si coché, collez les <b>Totaux de la semaine</b>.<br>
+                    Le système fera : <i>J6 = Total - (J1+J2+J3+J4+J5)</i>.
+                </p>
+            </div>
         </div>
+
         <p style="font-size:0.85em; color:#aaa; margin-bottom:5px;">Collez votre extraction ici :</p>
         <textarea id="bulkScoreTextarea" rows="10" placeholder='"Pseudo", 16,161,755' style="width:100%; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; padding:10px; font-family:monospace; resize:vertical;"></textarea>
+        
         <div class="modal-buttons">
             <button class="btn-cancel" onclick="closeBulkScoreModal()">Annuler</button>
             <button class="btn-save" onclick="processBulkScores()">Importer</button>

@@ -302,9 +302,27 @@ window.confirmScoreEdit = function() {
     closeScoreModal();
 }
 
+// ==========================================
+// SAISIE GLOBALE (BULK) AVEC CALCUL J6
+// ==========================================
+
+// Affiche ou cache le toggle de calcul selon le jour
+window.toggleBulkMode = function() {
+    const day = document.getElementById('bulkScoreDay').value;
+    const container = document.getElementById('bulkTotalModeContainer');
+    if (day === 'J6') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+        document.getElementById('bulkTotalModeToggle').checked = false;
+    }
+}
+
 window.openBulkScoreModal = function() {
     if (!currentWeek) { alert("Sélectionnez ou créez une semaine d'abord."); return; }
     document.getElementById('bulkScoreTextarea').value = '';
+    document.getElementById('bulkScoreDay').value = 'J1'; // Remet J1 par défaut
+    window.toggleBulkMode(); // Cache le toggle
     document.getElementById('bulkScoreModal').style.display = 'flex';
 }
 
@@ -314,6 +332,8 @@ window.processBulkScores = function() {
     if (!currentWeek) return;
     const text = document.getElementById('bulkScoreTextarea').value;
     const day = document.getElementById('bulkScoreDay').value;
+    const isTotalMode = document.getElementById('bulkTotalModeToggle').checked;
+    
     if (!text.trim()) return;
 
     const updates = {};
@@ -327,24 +347,38 @@ window.processBulkScores = function() {
     matches.forEach(match => {
         let pseudoStr = (match[1] || match[2]).trim().toLowerCase();
         let scoreStr = match[3].replace(/[\s,]/g, ''); // Nettoie le score
-        let score = parseInt(scoreStr, 10);
+        let importedScore = parseInt(scoreStr, 10);
         
-        if (!isNaN(score)) {
+        if (!isNaN(importedScore)) {
             let targetName = null;
 
-            // 1. Recherche Directe dans la base
+            // 1. Recherche Directe
             const directMatch = members.find(x => x.name.toLowerCase() === pseudoStr);
             if (directMatch) {
                 targetName = directMatch.name;
             } 
-            // 2. Recherche dans le Dictionnaire d'Alias
+            // 2. Recherche Dictionnaire (Alias)
             else if (aliases[pseudoStr]) {
                 targetName = aliases[pseudoStr];
             }
 
             // Enregistrement
             if (targetName) {
-                updates[`app4/scores/${currentWeek}/${targetName}/${day}`] = score;
+                let finalScoreToSave = importedScore;
+
+                // LOGIQUE J6 : CALCUL INVERSÉ
+                if (isTotalMode && day === 'J6') {
+                    const pScores = (allScores[currentWeek] && allScores[currentWeek][targetName]) ? allScores[currentWeek][targetName] : {};
+                    let sumJ1toJ5 = 0;
+                    ["J1", "J2", "J3", "J4", "J5"].forEach(d => { 
+                        sumJ1toJ5 += (pScores[d] || 0); 
+                    });
+                    
+                    finalScoreToSave = importedScore - sumJ1toJ5;
+                    if (finalScoreToSave < 0) finalScoreToSave = 0; // Sécurité anti-négatif
+                }
+
+                updates[`app4/scores/${currentWeek}/${targetName}/${day}`] = finalScoreToSave;
                 count++;
             } else {
                 notFoundList.push(pseudoStr);
@@ -355,7 +389,7 @@ window.processBulkScores = function() {
     if (Object.keys(updates).length > 0) {
         updates[`app4/scores/${currentWeek}/_init`] = null;
         update(ref(db), updates).then(() => {
-            push(ref(db, 'app4/logs'), `[${new Date().toLocaleString()}] BULK: ${count} scores (${day})`);
+            push(ref(db, 'app4/logs'), `[${new Date().toLocaleString()}] BULK: ${count} scores (${day}${isTotalMode ? ' via Total' : ''})`);
             
             let msg = `${count} scores enregistrés.`;
             if (notFoundList.length > 0) {
@@ -411,8 +445,12 @@ window.renderGrid = function() {
     const tableBody = document.getElementById('tableBody');
     const search = document.getElementById('searchPlayer').value.toLowerCase();
 
-    let theadHTML = `<tr><th class="sticky-col sortable-th" onclick="setSort('RANK')">Joueur${getSortIcon('RANK')}</th>`;
-    DAYS.forEach(d => { theadHTML += `<th class="sortable-th" onclick="setSort('${d}')">${d}${getSortIcon(d)}</th>`; });
+    // 1. En-têtes avec icônes de tri dynamiques
+    let theadHTML = `<tr>
+        <th class="sticky-col sortable-th" onclick="setSort('RANK')">Joueur${getSortIcon('RANK')}</th>`;
+    DAYS.forEach(d => {
+        theadHTML += `<th class="sortable-th" onclick="setSort('${d}')">${d}${getSortIcon(d)}</th>`;
+    });
     theadHTML += `<th class="sortable-th" style="color: var(--vip-color);" onclick="setSort('TOTAL')">TOTAL${getSortIcon('TOTAL')}</th></tr>`;
     tableHeader.innerHTML = theadHTML;
 
@@ -425,15 +463,24 @@ window.renderGrid = function() {
 
     const weekData = allScores[currentWeek];
 
-    let playersData = members
-        .filter(m => m.rank !== 'ABS' && (!search || m.name.toLowerCase().includes(search)))
-        .map(m => {
-            const pScores = weekData[m.name] || {};
-            let total = 0;
-            DAYS.forEach(d => { total += (pScores[d] || 0); });
-            return { member: m, scores: pScores, total: total };
-        });
+    // 2. CALCULS PUIS FILTRAGE INTELLIGENT DES ABS
+    let playersData = members.map(m => {
+        // On calcule d'abord les scores de tout le monde
+        const pScores = weekData[m.name] || {};
+        let total = 0;
+        DAYS.forEach(d => { total += (pScores[d] || 0); });
+        return { member: m, scores: pScores, total: total };
+    }).filter(p => {
+        // Filtre Recherche
+        if (search && !p.member.name.toLowerCase().includes(search)) return false;
+        
+        // NOUVEAU Filtre ABS : on cache le joueur s'il est ABS ET qu'il a 0 point
+        if (p.member.rank === 'ABS' && p.total === 0) return false;
+        
+        return true;
+    });
 
+    // 3. Logique de tri 3 états
     playersData.sort((a, b) => {
         if (sortCol && sortState !== "NONE") {
             let valA, valB;
@@ -441,12 +488,16 @@ window.renderGrid = function() {
             else if (sortCol === 'RANK') { valA = RANK_POWER[a.member.rank]; valB = RANK_POWER[b.member.rank]; }
             else { valA = a.scores[sortCol] || 0; valB = b.scores[sortCol] || 0; }
 
-            if (valA !== valB) return sortState === 'ASC' ? valA - valB : valB - valA;
+            if (valA !== valB) {
+                return sortState === 'ASC' ? valA - valB : valB - valA;
+            }
         }
+        // Tri par défaut (Rang puis Alphabétique)
         const diffRank = RANK_POWER[b.member.rank] - RANK_POWER[a.member.rank];
         return diffRank !== 0 ? diffRank : a.member.name.localeCompare(b.member.name);
     });
 
+    // 4. Affichage
     if(playersData.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#666;">Aucun joueur trouvé.</td></tr>`;
         return;
@@ -455,15 +506,33 @@ window.renderGrid = function() {
     playersData.forEach(p => {
         const m = p.member;
         const isActive = p.total > 0 ? "color: white;" : "color: #888;";
-        let rowHTML = `<tr><td class="player-cell sticky-col"><span class="rank-mini-badge">${m.rank}</span><span class="player-name" style="${isActive}">${m.name}</span></td>`;
+
+        let rowHTML = `
+            <tr>
+                <td class="player-cell sticky-col">
+                    <span class="rank-mini-badge ${m.rank === 'ABS' ? 'abs-badge' : ''}">${m.rank}</span>
+                    <span class="player-name" style="${isActive}">${m.name}</span>
+                </td>
+        `;
 
         DAYS.forEach(d => {
             const val = p.scores[d] || 0;
             const colorClass = getScoreClass(val);
-            rowHTML += `<td><div class="score-cell ${colorClass}" onclick="openScoreModal('${m.name}', '${d}')">${formatScore(val)}</div></td>`;
+            rowHTML += `
+                <td>
+                    <div class="score-cell ${colorClass}" onclick="openScoreModal('${m.name}', '${d}')">
+                        ${formatScore(val)}
+                    </div>
+                </td>
+            `;
         });
 
-        rowHTML += `<td style="font-weight:bold; font-size:1.1em; background: rgba(255, 215, 0, 0.05); color: var(--vip-color);">${formatScore(p.total)}</td></tr>`;
+        rowHTML += `
+            <td style="font-weight:bold; font-size:1.1em; background: rgba(255, 215, 0, 0.05); color: var(--vip-color);">
+                ${formatScore(p.total)}
+            </td>
+        </tr>`;
+
         tableBody.innerHTML += rowHTML;
     });
 }
